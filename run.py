@@ -53,7 +53,6 @@ def get_parametres_from_file(path) -> list:
             b = str(row['country'])
             if a != 'nan' and b != 'nan':
                 result.append((a, b))
-        # print(result)
         return result
 
 root = tk.Tk()
