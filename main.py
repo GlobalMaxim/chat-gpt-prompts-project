@@ -36,7 +36,7 @@ class TextCreator:
         for prompt in self.prompts:
             document, text = self.generate_text_from_prompt(document, prompt)
             text_result.append(text)
-        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f'{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}.docx'))
+        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}.docx"))
         if self.sync_data:
             self.syncronize_texts(text_result)
 
@@ -61,7 +61,7 @@ class TextCreator:
         res = self.get_message_from_chat(query)
         document = Document()
         document.add_paragraph(res)
-        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f'{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}(1).docx'))
+        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}(1).docx"))
         # return resulted_text
 
     def get_message_from_chat(self, question: str) -> str:
