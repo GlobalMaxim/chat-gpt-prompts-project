@@ -20,6 +20,11 @@ def browse_parametres_file():
     parametres_label_entry.delete(0, tk.END)
     parametres_label_entry.insert(0, file_path)
 
+def browse_prompts_file():
+    file_path = filedialog.askopenfilename()
+    prompts_label_entry.delete(0, tk.END)
+    prompts_label_entry.insert(0, file_path)
+
 def browse_result_path():
     file_path = filedialog.askdirectory()
     result_folder_entry.delete(0, tk.END)
@@ -28,15 +33,18 @@ def browse_result_path():
 def run():
     api_key = api_key_entry.get()
     parametres_file = parametres_label_entry.get()
+    prompts_file = prompts_label_entry.get()
     result_folder = result_folder_entry.get()
     gpt_version = gpt_version_var.get()
     sync_data = bool(sync_data_entry.get())
     parametres_list = get_parametres_from_file(parametres_file)
+    prompts = get_prompts_from_file(prompts_file)
     for (keyword, country) in parametres_list:
          generator = TextCreator(
                                     api_key=api_key, 
                                     keyword=keyword,
                                     country=country, 
+                                    prompts=prompts,
                                     result_folder_path=result_folder,
                                     gpt_version=gpt_version,
                                     sync_data=sync_data
@@ -45,15 +53,24 @@ def run():
     text = 'Finished'
     show_popup(text)
 
+def get_prompts_from_file(path) -> list:
+    data = read_csv(path, names=['prompts'], delimiter=";")
+    result = []
+    for _, row in data.iterrows():
+        a = str(row['prompts'])
+        if a != 'nan':
+            result.append(a)
+    return result
+
 def get_parametres_from_file(path) -> list:
-        data = read_csv(path, names=['keyword', 'country'])
-        result = []
-        for _, row in data.iterrows():
-            a = str(row['keyword'])
-            b = str(row['country'])
-            if a != 'nan' and b != 'nan':
-                result.append((a, b))
-        return result
+    data = read_csv(path, names=['keyword', 'country'], delimiter=";")
+    result = []
+    for _, row in data.iterrows():
+        a = str(row['keyword'])
+        b = str(row['country'])
+        if a != 'nan' and b != 'nan':
+            result.append((a, b))
+    return result
 
 root = tk.Tk()
 root.title("Chat GPT Text Creator")
@@ -67,11 +84,21 @@ api_key_entry.pack(padx=60)
 delimeter = tk.Label(root, text="________________")
 delimeter.pack()
 
-parametres_label = tk.Label(root, text="Parametres example path:")
+parametres_label = tk.Label(root, text="Parametres path:")
 parametres_label.pack()
 parametres_label_entry = tk.Entry(root)
 parametres_label_entry.pack()
 browse_button = tk.Button(root, text="Browse parametres file", command=browse_parametres_file)
+browse_button.pack()
+
+delimeter = tk.Label(root, text="________________")
+delimeter.pack()
+
+prompts_label = tk.Label(root, text="Prompts path:")
+prompts_label.pack()
+prompts_label_entry = tk.Entry(root)
+prompts_label_entry.pack()
+browse_button = tk.Button(root, text="Browse prompts file", command=browse_prompts_file)
 browse_button.pack()
 
 delimeter = tk.Label(root, text="________________")
