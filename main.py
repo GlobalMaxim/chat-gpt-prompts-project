@@ -5,6 +5,7 @@ from docx import Document
 from docx.shared import Pt
 import os
 from tenacity import retry, wait_chain, wait_fixed
+from time import sleep
 
 class TextCreator:
     def __init__(   
@@ -36,6 +37,8 @@ class TextCreator:
         for prompt in self.prompts:
             document, text = self.generate_text_from_prompt(document, prompt)
             text_result.append(text)
+            if self.gpt_version == "GPT-3.5":
+                sleep(30)
         document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}.docx"))
         if self.sync_data:
             self.syncronize_texts(text_result)
@@ -43,22 +46,27 @@ class TextCreator:
     def prestart(self):
         os.makedirs(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}"), exist_ok=True)
 
+    @retry(wait=wait_chain(*[wait_fixed(10) for i in range(6)]))
     def generate_text_from_prompt(self, document: Document, prompt):
-        query = f""" Generate data where [keyword]={self.keyword} and [country]={self.country}:\n"""
+        query = f"""Generate text according to the next rules:\n1. Change [keyword]='{self.keyword}' and [country]='{self.country}' in the text.\n 2. If [country]="nan" then generate text without this parameter.\n"""
+        query += """3. If you need to generate a table, do not use "|" symbols for visual display of table. Use only '\t' and '\n' symbols for table displayment. Table must be maximum in 2 columns, so write each key:value pairs in new row.\n4. In case if I ask you to make FAQ section, then firstly write question, then ":" and after that answer for this question and create as numeric list.\n5. If I do not ask you make FAQ section, then do not do it.\n6. At the end of your response add '\n\n \n Rules are finished, now you have to generate data according to rules: \n"""
         query += prompt
-        query += """\n Generate as text. Only if you need to generate a table, do not use "|" symblols for visual display, use only tabulation and new line symbols, every pair in list start from new line, make different tabulations to display values in pretty way, like in columns. 
-                    Only if requst asks to make FAQ block, then firstly write question, then ":" and after that answer for this question and create as numeric list. At the end add "\n\n" """
         generated_data = self.get_message_from_chat(query)
+        if not generated_data or "Sorry" in generated_data or 'sorry' in generated_data or 'apologize' in generated_data:
+            raise
         # data = json.loads(generated_data.replace('`', '').replace('json', ''))
         document.add_paragraph(generated_data)
         print(generated_data)
         return document, generated_data
     
+    @retry(wait=wait_chain(*[wait_fixed(10) for i in range(6)]))
     def syncronize_texts(self, texts):
         resulted_text = '\n'.join(texts)
-        query = f"""Check the text below. Remove duplicated information but leave fully the same content structure. Rewrite data to synchronize all data through the text.\n"""
+        query = f"""Check the text below. Remove duplicated information but leave absolutely the same content structure with all paragraphs, tables and lists. Rewrite data to synchronize all data through the text.\n"""
         query += resulted_text
         res = self.get_message_from_chat(query)
+        if not res:
+            raise
         document = Document()
         document.add_paragraph(res)
         document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}(1).docx"))

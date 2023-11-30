@@ -68,8 +68,7 @@ def get_parametres_from_file(path) -> list:
     for _, row in data.iterrows():
         a = str(row['keyword'])
         b = str(row['country'])
-        if a != 'nan' and b != 'nan':
-            result.append((a, b))
+        result.append((a, b))
     return result
 
 root = tk.Tk()
