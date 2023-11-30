@@ -3,3 +3,6 @@ __pycache__
 *.csv
 *.docx
 .DS_Store
+*.spec
+build/
+dist/
