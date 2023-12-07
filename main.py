@@ -6,6 +6,7 @@ from docx.shared import Pt
 import os
 from tenacity import retry, wait_chain, wait_fixed
 from time import sleep
+import re
 
 class TextCreator:
     def __init__(   
@@ -39,12 +40,12 @@ class TextCreator:
             text_result.append(text)
             if self.gpt_version == "GPT-3.5":
                 sleep(30)
-        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}.docx"))
+        document.save(os.path.join(self.result_folder_path, f"{re.sub(r'[\/:"*?<>| ]+', '_',self.keyword).lower()}_{re.sub(r'[\/:"*?<>| ]+', '_', self.country).lower()}", f"{re.sub(r'[\/:"*?<>| ]+', '_', self.keyword).lower()}_{re.sub(r'[\/:"*?<>| ]+','_', self.country).lower()}.docx"))
         if self.sync_data:
             self.syncronize_texts(text_result)
 
     def prestart(self):
-        os.makedirs(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}"), exist_ok=True)
+        os.makedirs(os.path.join(self.result_folder_path, f"{re.sub(r'[\/:"*?<>| ]+','_',self.keyword).lower()}_{re.sub(r'[\/:"*?<>| ]+', '_',self.country).lower()}"), exist_ok=True)
 
     @retry(wait=wait_chain(*[wait_fixed(10) for i in range(6)]))
     def generate_text_from_prompt(self, document: Document, prompt):
@@ -69,7 +70,7 @@ class TextCreator:
             raise
         document = Document()
         document.add_paragraph(res)
-        document.save(os.path.join(self.result_folder_path, f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}", f"{self.keyword.replace(' ', '_').lower()}_{self.country.replace(' ', '_').lower()}(1).docx"))
+        document.save(os.path.join(self.result_folder_path, f"{re.sub(r'[\/:"*?<>| ]+', '_',self.keyword).lower()}_{re.sub(r'[\/:"*?<>| ]+', '_',self.country).lower()}", f"{re.sub(r'[\/:"*?<>| ]+', '_',self.keyword).lower()}_{re.sub(r'[\/:"*?<>| ]+', '_',self.country).lower()}(1).docx"))
         # return resulted_text
 
     def get_message_from_chat(self, question: str) -> str:
